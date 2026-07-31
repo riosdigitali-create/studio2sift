@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STUDIO2SIFT — Deportiva de lujo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800;900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#171613;
+    --charcoal:#211f1a;
+    --concrete:#37332b;
+    --concrete-2:#453f34;
+    --bone:#ece6d6;
+    --bone-dim:#c9c2ae;
+    --stone:#8c8576;
+    --brass:#ad7f3f;
+    --brass-dim:#8a6733;
+    --line: rgba(236,230,214,0.12);
+    --radius: 2px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--bone);
+    font-family:'Inter',sans-serif;
+    font-weight:400;
+    overflow-x:hidden;
+    position:relative;
+  }
+  /* matte grain overlay — the signature texture */
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    z-index:999;
+    pointer-events:none;
+    opacity:.05;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  h1,h2,h3,.display{ font-family:'Unbounded',sans-serif; letter-spacing:-0.01em; }
+  .mono{ font-family:'JetBrains Mono',monospace; }
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  img{display:block;max-width:100%;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 32px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass);
+  }
+
+  /* NAV */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:500;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:22px 32px;
+    background:linear-gradient(180deg, rgba(23,22,19,.85), rgba(23,22,19,0));
+    backdrop-filter:blur(2px);
+  }
+  .logo{font-family:'Unbounded';font-weight:800;font-size:19px;letter-spacing:.02em;}
+  .logo span{color:var(--brass);}
+  nav ul{display:flex;gap:34px;}
+  nav a{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--bone-dim);transition:color .25s;}
+  nav a:hover{color:var(--bone);}
+  .nav-right{display:flex;align-items:center;gap:22px;}
+  .cart-btn{position:relative;display:flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--bone);}
+  .cart-count{
+    background:var(--brass);color:var(--ink);font-family:'JetBrains Mono';font-size:11px;
+    width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  }
+  .burger{display:none;}
+  @media(max-width:860px){
+    nav{display:none;}
+    header{padding:18px 20px;}
+  }
+
+  /* HERO */
+  .hero{
+    position:relative;min-height:100vh;display:flex;align-items:flex-end;
+    overflow:hidden;
+  }
+  .hero-bg{position:absolute;inset:0;z-index:0;}
+  .hero-bg img{width:100%;height:100%;object-fit:cover;filter:saturate(.72) contrast(1.05) brightness(.62);}
+  .hero-bg::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(23,22,19,.55) 0%, rgba(23,22,19,.15) 40%, rgba(23,22,19,.92) 100%);
+  }
+  .spotlight{
+    position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(420px circle at var(--mx,50%) var(--my,40%), rgba(236,230,214,.10), transparent 60%);
+    transition:background .05s linear;
+  }
+  .hero-inner{position:relative;z-index:2;width:100%;padding:0 32px 76px;}
+  .hero-inner .wrap{padding:0;}
+  .hero-eyebrow{margin-bottom:22px;display:flex;align-items:center;gap:14px;}
+  .hero-eyebrow .rule{width:40px;height:1px;background:var(--brass);}
+  .hero h1{
+    font-size:clamp(48px,9vw,128px);
+    line-height:.92;font-weight:900;color:var(--bone);
+    max-width:16ch;
+  }
+  .hero-sub{
+    margin-top:26px;max-width:460px;color:var(--bone-dim);font-size:16px;line-height:1.6;font-weight:300;
+  }
+  .hero-cta{margin-top:38px;display:flex;gap:16px;flex-wrap:wrap;}
+  .btn{
+    padding:15px 30px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+    border-radius:var(--radius);transition:all .25s;
+  }
+  .btn-solid{background:var(--bone);color:var(--ink);}
+  .btn-solid:hover{background:var(--brass);color:var(--ink);}
+  .btn-ghost{border:1px solid var(--line);color:var(--bone);}
+  .btn-ghost:hover{border-color:var(--brass);color:var(--brass);}
+
+  /* MARQUEE */
+  .marquee{
+    background:var(--charcoal);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    overflow:hidden;padding:14px 0;white-space:nowrap;
+  }
+  .marquee-track{display:inline-flex;animation:scroll 30s linear infinite;}
+  .marquee span{
+    font-family:'JetBrains Mono';font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--stone);padding:0 28px;
+  }
+  .marquee span.dot{color:var(--brass);}
+  @keyframes scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+  /* SECTIONS */
+  section{padding:120px 0;}
+  .section-head{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
+    margin-bottom:56px;flex-wrap:wrap;
+  }
+  .section-head h2{font-size:clamp(32px,4vw,52px);font-weight:800;line-height:1.05;}
+  .section-head p{max-width:340px;color:var(--stone);font-size:14px;line-height:1.6;}
+
+  /* FILTER TABS */
+  .filters{display:flex;gap:10px;margin-bottom:44px;flex-wrap:wrap;}
+  .filter-btn{
+    padding:10px 20px;border:1px solid var(--line);border-radius:20px;
+    font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--bone-dim);
+    transition:all .2s;
+  }
+  .filter-btn.active,.filter-btn:hover{border-color:var(--brass);color:var(--brass);}
+
+  /* PRODUCT GRID */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line);}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr;}}
+  .card{
+    background:var(--ink);position:relative;overflow:hidden;cursor:pointer;
+  }
+  .card-img{position:relative;aspect-ratio:4/5;overflow:hidden;background:var(--concrete);}
+  .card-img img{width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.2,.8,.2,1);filter:saturate(.85);}
+  .card:hover .card-img img{transform:scale(1.06);}
+  .card-tag{
+    position:absolute;top:14px;left:14px;background:rgba(23,22,19,.75);backdrop-filter:blur(4px);
+    padding:5px 10px;font-family:'JetBrains Mono';font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass);
+  }
+  .card-body{padding:20px;}
+  .card-body h3{font-size:17px;font-weight:600;margin-bottom:6px;}
+  .card-meta{display:flex;justify-content:space-between;align-items:center;margin-top:14px;}
+  .price{font-family:'JetBrains Mono';font-size:15px;color:var(--bone);}
+  .quick-add{
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--stone);
+    border-bottom:1px solid transparent;transition:all .2s;
+  }
+  .card:hover .quick-add{color:var(--brass);border-color:var(--brass);}
+
+  /* STORY */
+  .story{background:var(--charcoal);}
+  .story-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;}
+  @media(max-width:860px){.story-grid{grid-template-columns:1fr;gap:40px;}}
+  .story-img{aspect-ratio:4/5;overflow:hidden;}
+  .story-img img{width:100%;height:100%;object-fit:cover;filter:saturate(.8) brightness(.95);}
+  .story-copy h2{font-size:clamp(30px,4vw,46px);margin-bottom:24px;font-weight:800;line-height:1.1;}
+  .story-copy p{color:var(--bone-dim);line-height:1.8;font-size:15px;font-weight:300;margin-bottom:18px;}
+  .story-stats{display:flex;gap:40px;margin-top:36px;}
+  .story-stats div span{display:block;}
+  .story-stats .num{font-family:'JetBrains Mono';font-size:26px;color:var(--brass);}
+  .story-stats .lbl{font-size:11px;color:var(--stone);text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+
+  /* FOOTER */
+  footer{border-top:1px solid var(--line);padding:70px 0 30px;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;margin-bottom:60px;}
+  @media(max-width:760px){.footer-grid{grid-template-columns:1fr;}}
+  footer h4{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--stone);margin-bottom:18px;}
+  footer li{margin-bottom:10px;}
+  footer a{color:var(--bone-dim);font-size:14px;transition:color .2s;}
+  footer a:hover{color:var(--brass);}
+  .foot-bottom{
+    display:flex;justify-content:space-between;padding-top:26px;border-top:1px solid var(--line);
+    font-size:12px;color:var(--stone);flex-wrap:wrap;gap:10px;
+  }
+  .foot-bottom a{color:var(--stone);}
+  .wa-float{
+    position:fixed;bottom:26px;right:26px;z-index:400;
+    background:var(--brass);color:var(--ink);width:56px;height:56px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.4);
+    transition:transform .2s;
+  }
+  .wa-float:hover{transform:scale(1.08);}
+
+  /* MODAL: quick view */
+  .overlay{
+    position:fixed;inset:0;background:rgba(10,9,7,.72);backdrop-filter:blur(3px);
+    z-index:700;display:none;align-items:center;justify-content:center;padding:20px;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--charcoal);max-width:820px;width:100%;max-height:88vh;overflow:auto;
+    display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);
+  }
+  @media(max-width:700px){.modal{grid-template-columns:1fr;}}
+  .modal-img{aspect-ratio:4/5;overflow:hidden;background:var(--concrete);}
+  .modal-img img{width:100%;height:100%;object-fit:cover;}
+  .modal-body{padding:38px;position:relative;}
+  .modal-close{position:absolute;top:16px;right:16px;font-size:22px;color:var(--stone);}
+  .modal-body .eyebrow{margin-bottom:10px;display:block;}
+  .modal-body h3{font-size:26px;margin-bottom:14px;}
+  .modal-body p.desc{color:var(--bone-dim);font-size:14px;line-height:1.7;margin-bottom:20px;font-weight:300;}
+  .modal-price{font-family:'JetBrains Mono';font-size:22px;margin-bottom:24px;}
+  .field-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--stone);margin-bottom:10px;display:block;}
+  .size-row{display:flex;gap:8px;margin-bottom:26px;flex-wrap:wrap;}
+  .size-opt{
+    width:44px;height:40px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono';font-size:12px;transition:all .2s;
+  }
+  .size-opt.active,.size-opt:hover{border-color:var(--brass);color:var(--brass);}
+  .qty-row{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+  .qty-row button{width:32px;height:32px;border:1px solid var(--line);font-size:16px;}
+  .qty-row button:hover{border-color:var(--brass);color:var(--brass);}
+  .stock-note{font-size:12px;color:var(--stone);margin-top:14px;}
+
+  /* CART DRAWER */
+  .drawer-overlay{
+    position:fixed;inset:0;background:rgba(10,9,7,.6);z-index:600;display:none;
+  }
+  .drawer-overlay.open{display:block;}
+  .drawer{
+    position:fixed;top:0;right:-420px;width:400px;max-width:92vw;height:100vh;
+    background:var(--ink);border-left:1px solid var(--line);z-index:650;
+    display:flex;flex-direction:column;transition:right .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .drawer.open{right:0;}
+  .drawer-head{
+    display:flex;justify-content:space-between;align-items:center;padding:24px 26px;border-bottom:1px solid var(--line);
+  }
+  .drawer-head h3{font-size:16px;text-transform:uppercase;letter-spacing:.06em;}
+  .drawer-items{flex:1;overflow-y:auto;padding:10px 26px;}
+  .drawer-item{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--line);}
+  .drawer-item img{width:68px;height:82px;object-fit:cover;background:var(--concrete);}
+  .di-info{flex:1;}
+  .di-info h4{font-size:14px;margin-bottom:4px;}
+  .di-info .meta{font-size:11px;color:var(--stone);margin-bottom:8px;font-family:'JetBrains Mono';}
+  .di-qty{display:flex;align-items:center;gap:10px;}
+  .di-qty button{width:24px;height:24px;border:1px solid var(--line);font-size:13px;}
+  .di-remove{font-size:11px;color:var(--stone);text-decoration:underline;margin-left:auto;}
+  .di-price{font-family:'JetBrains Mono';font-size:13px;white-space:nowrap;}
+  .drawer-empty{padding:60px 20px;text-align:center;color:var(--stone);font-size:13px;}
+  .drawer-foot{padding:22px 26px 28px;border-top:1px solid var(--line);}
+  .drawer-total{display:flex;justify-content:space-between;font-size:15px;margin-bottom:18px;}
+  .drawer-total .price{font-size:20px;}
+  .wa-checkout{
+    width:100%;padding:16px;background:#3fae5c;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;
+    font-size:13px;letter-spacing:.06em;text-transform:uppercase;border-radius:var(--radius);
+  }
+  .wa-checkout:hover{background:#359049;}
+
+  /* TOAST */
+  .toast{
+    position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(120%);
+    background:var(--bone);color:var(--ink);padding:14px 24px;font-size:13px;z-index:800;
+    transition:transform .3s ease; letter-spacing:.02em;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+
+  /* ADMIN */
+  #admin{display:none;min-height:100vh;background:var(--ink);padding:100px 32px 60px;}
+  #admin.open{display:block;}
+  .admin-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;flex-wrap:wrap;gap:16px;}
+  .admin-top h2{font-size:28px;}
+  .admin-tabs{display:flex;gap:10px;margin-bottom:30px;}
+  .admin-tab{padding:10px 18px;border:1px solid var(--line);font-size:12px;text-transform:uppercase;letter-spacing:.06em;}
+  .admin-tab.active{border-color:var(--brass);color:var(--brass);}
+  .admin-panel{display:none;}
+  .admin-panel.active{display:block;}
+  table{width:100%;border-collapse:collapse;}
+  th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);font-size:13px;}
+  th{font-family:'JetBrains Mono';font-size:11px;text-transform:uppercase;color:var(--stone);letter-spacing:.06em;}
+  td img{width:44px;height:54px;object-fit:cover;}
+  .row-actions button{font-size:11px;text-transform:uppercase;color:var(--stone);margin-right:14px;text-decoration:underline;}
+  .row-actions button:hover{color:var(--brass);}
+  .admin-form{
+    background:var(--charcoal);border:1px solid var(--line);padding:26px;margin-bottom:30px;display:none;
+  }
+  .admin-form.open{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .admin-form label{grid-column:span 1;display:flex;flex-direction:column;gap:6px;font-size:11px;text-transform:uppercase;color:var(--stone);letter-spacing:.05em;}
+  .admin-form input,.admin-form select,.admin-form textarea{
+    background:var(--concrete);border:1px solid var(--line);color:var(--bone);padding:10px 12px;font-family:'Inter';font-size:13px;
+  }
+  .admin-form textarea{grid-column:span 2;min-height:70px;resize:vertical;}
+  .admin-form .full{grid-column:span 2;}
+  .admin-form .form-actions{grid-column:span 2;display:flex;gap:12px;margin-top:6px;}
+  .add-btn{padding:12px 22px;border:1px solid var(--brass);color:var(--brass);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;}
+  .add-btn:hover{background:var(--brass);color:var(--ink);}
+  .empty-note{color:var(--stone);font-size:13px;padding:30px 0;}
+  .lock-screen{
+    max-width:340px;margin:120px auto 0;text-align:center;
+  }
+  .lock-screen input{
+    width:100%;background:var(--concrete);border:1px solid var(--line);color:var(--bone);
+    padding:14px;text-align:center;font-family:'JetBrains Mono';letter-spacing:.3em;margin:20px 0;font-size:16px;
+  }
+  .back-store{font-size:12px;color:var(--stone);text-transform:uppercase;letter-spacing:.06em;}
+  .back-store:hover{color:var(--brass);}
+  .badge-low{color:#c7794a;}
+</style>
+</head>
+<body>
+
+<div class="spotlight" id="heroSpot" style="display:none"></div>
+
+<!-- ============ HEADER ============ -->
+<header>
+  <a href="#top" class="logo">studio<span>2</span>sift</a>
+  <nav>
+    <ul>
+      <li><a href="#coleccion">Colección</a></li>
+      <li><a href="#accesorios">Accesorios</a></li>
+      <li><a href="#historia">Estudio</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+  </nav>
+  <div class="nav-right">
+    <button class="cart-btn" onclick="openDrawer()">
+      Bolsa <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- ============ STORE VIEW ============ -->
+<div id="store">
+
+  <!-- HERO -->
+  <section class="hero" id="top">
+    <div class="hero-bg">
+      <img src="https://images.unsplash.com/photo-1774414489671-9f33b8dff0a9?fm=jpg&q=80&w=2000&auto=format&fit=crop" alt="studio2sift">
+    </div>
+    <div class="spotlight" id="spot"></div>
+    <div class="hero-inner">
+      <div class="wrap">
+        <div class="hero-eyebrow"><span class="rule"></span><span class="eyebrow">Colección 2026 · Tacto mate</span></div>
+        <h1>El lujo<br>no brilla,<br>se siente.</h1>
+        <p class="hero-sub">Ropa y accesorios deportivos de acabado mate, hechos para el cuerpo en movimiento. Sin logos gritados, sin brillos falsos — sólo material que responde.</p>
+        <div class="hero-cta">
+          <a href="#coleccion" class="btn btn-solid">Ver colección</a>
+          <a href="#historia" class="btn btn-ghost">El estudio</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee">
+    <div class="marquee-track" id="marqueeTrack"></div>
+  </div>
+
+  <!-- COLECCIÓN -->
+  <section id="coleccion">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>La colección</h2>
+        <p>Cada pieza pasa por un tratamiento mate que elimina el brillo del textil sin sacrificar rendimiento. Producción limitada, sin reposición inmediata.</p>
+      </div>
+      <div class="filters" id="filters"></div>
+      <div class="grid" id="productGrid"></div>
+    </div>
+  </section>
+
+  <!-- HISTORIA -->
+  <section class="story" id="historia">
+    <div class="wrap">
+      <div class="story-grid">
+        <div class="story-img">
+          <img src="https://images.unsplash.com/photo-1762331660777-840a589195f0?fm=jpg&q=80&w=1400&auto=format&fit=crop" alt="Estudio studio2sift">
+        </div>
+        <div class="story-copy">
+          <span class="eyebrow">El estudio</span>
+          <h2 style="margin-top:16px;">Diseñado para quien entrena en silencio.</h2>
+          <p>studio2sift nace de una idea simple: el desempeño no necesita presumirse. Trabajamos telas técnicas con acabados mate — sin brillos plásticos, sin estampados que se agrietan — pensadas para durar más de una temporada.</p>
+          <p>Cada colección se produce en lotes pequeños. Cuando una pieza se agota, no vuelve. Eso es lo que hace que lo que usas sea, de verdad, tuyo.</p>
+          <div class="story-stats">
+            <div><span class="num mono">12</span><span class="lbl">Piezas por lote</span></div>
+            <div><span class="num mono">0</span><span class="lbl">Reposiciones</span></div>
+            <div><span class="num mono">100%</span><span class="lbl">Acabado mate</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /#store -->
+
+<!-- ============ ADMIN VIEW ============ -->
+<div id="admin">
+  <div class="wrap">
+    <div id="adminLocked" class="lock-screen">
+      <span class="eyebrow">Panel studio2sift</span>
+      <h2 style="margin-top:14px;font-size:22px;">Acceso restringido</h2>
+      <input type="password" id="adminPass" placeholder="• • • •" maxlength="8">
+      <button class="btn btn-solid" style="width:100%" onclick="tryUnlock()">Entrar</button>
+      <p style="margin-top:14px;"><a href="#" class="back-store" onclick="closeAdmin();return false;">← Volver a la tienda</a></p>
+      <p style="margin-top:8px;color:var(--stone);font-size:11px;">Demo — clave: 2026</p>
+    </div>
+
+    <div id="adminContent" style="display:none;">
+      <div class="admin-top">
+        <div>
+          <span class="eyebrow">Panel studio2sift</span>
+          <h2 style="margin-top:8px;">Administración</h2>
+        </div>
+        <a href="#" class="back-store" onclick="closeAdmin();return false;">← Volver a la tienda</a>
+      </div>
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="prods" onclick="switchAdminTab('prods')">Productos</button>
+        <button class="admin-tab" data-tab="orders" onclick="switchAdminTab('orders')">Pedidos</button>
+      </div>
+
+      <!-- PRODUCTS PANEL -->
+      <div class="admin-panel active" id="panel-prods">
+        <button class="add-btn" onclick="openForm()">+ Nuevo producto</button>
+        <div class="admin-form" id="prodForm">
+          <input type="hidden" id="f-id">
+          <label>Nombre<input type="text" id="f-name" placeholder="OXIDO"></label>
+          <label>Categoría
+            <select id="f-cat"><option value="ropa">Ropa</option><option value="accesorios">Accesorios</option></select>
+          </label>
+          <label>Precio (MXN)<input type="number" id="f-price" placeholder="1890"></label>
+          <label>Existencias<input type="number" id="f-stock" placeholder="12"></label>
+          <label class="full">URL de imagen<input type="text" id="f-img" placeholder="https://images.unsplash.com/..."></label>
+          <label class="full">Descripción<textarea id="f-desc" placeholder="Chaqueta técnica de corte relajado..."></textarea></label>
+          <div class="form-actions">
+            <button class="btn btn-solid" onclick="saveProduct()">Guardar</button>
+            <button class="btn btn-ghost" onclick="closeForm()">Cancelar</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th></th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th></th></tr></thead>
+          <tbody id="adminProdTable"></tbody>
+        </table>
+      </div>
+
+      <!-- ORDERS PANEL -->
+      <div class="admin-panel" id="panel-orders">
+        <table>
+          <thead><tr><th>Fecha</th><th>Piezas</th><th>Total</th><th>Estado</th></tr></thead>
+          <tbody id="adminOrdersTable"></tbody>
+        </table>
+        <p class="empty-note" id="ordersEmpty" style="display:none;">Aún no hay pedidos registrados. Los pedidos se guardan aquí cuando un cliente finaliza por WhatsApp.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PRODUCT QUICK VIEW MODAL ============ -->
+<div class="overlay" id="quickView">
+  <div class="modal">
+    <span class="modal-close" onclick="closeQuickView()" style="position:absolute;z-index:5;">✕</span>
+    <div class="modal-img"><img id="qvImg" src="" alt=""></div>
+    <div class="modal-body">
+      <span class="eyebrow" id="qvCat"></span>
+      <h3 id="qvName"></h3>
+      <p class="desc" id="qvDesc"></p>
+      <div class="modal-price mono" id="qvPrice"></div>
+      <span class="field-label">Talla</span>
+      <div class="size-row" id="qvSizes"></div>
+      <span class="field-label">Cantidad</span>
+      <div class="qty-row">
+        <button onclick="changeQty(-1)">−</button>
+        <span id="qvQty" class="mono">1</span>
+        <button onclick="changeQty(1)">+</button>
+      </div>
+      <button class="btn btn-solid" style="width:100%" onclick="addToCart()">Agregar a la bolsa</button>
+      <p class="stock-note" id="qvStock"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CART DRAWER ============ -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h3>Tu bolsa</h3>
+    <span onclick="closeDrawer()" style="cursor:pointer;font-size:20px;color:var(--stone);">✕</span>
+  </div>
+  <div class="drawer-items" id="drawerItems"></div>
+  <div class="drawer-foot" id="drawerFoot">
+    <div class="drawer-total"><span>Subtotal</span><span class="price mono" id="drawerTotal">$0</span></div>
+    <a href="#" class="wa-checkout" id="waCheckout" target="_blank">
+      Finalizar por WhatsApp
+    </a>
+  </div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer id="contacto">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a href="#top" class="logo">studio<span style="color:var(--brass)">2</span>sift</a>
+        <p style="color:var(--bone-dim);font-size:14px;margin-top:16px;max-width:280px;line-height:1.7;font-weight:300;">Ropa y accesorios deportivos de acabado mate. Lotes limitados, pedidos directos por WhatsApp.</p>
+      </div>
+      <div>
+        <h4>Tienda</h4>
+        <ul>
+          <li><a href="#coleccion">Colección</a></li>
+          <li><a href="#historia">El estudio</a></li>
+          <li><a href="#" onclick="openAdmin();return false;">Panel</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contacto</h4>
+        <ul>
+          <li><a href="https://wa.me/523319101150" target="_blank">WhatsApp 33 1910 1150</a></li>
+          <li><a href="https://instagram.com/studio2sift" target="_blank">@studio2sift</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 studio2sift — Demo desarrollada por Ziv Creativo</span>
+      <a href="#" onclick="openAdmin();return false;">Panel de administración</a>
+    </div>
+  </div>
+</footer>
+
+<a href="https://wa.me/523319101150?text=Hola%2C%20quiero%20más%20información%20de%20studio2sift" target="_blank" class="wa-float" aria-label="WhatsApp">
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M17.6 6.32A7.85 7.85 0 0 0 12.05 4a7.94 7.94 0 0 0-6.87 11.87L4 20l4.24-1.11a7.9 7.9 0 0 0 3.8.97h.003a7.94 7.94 0 0 0 5.57-13.54ZM12.05 18.4h-.003a6.6 6.6 0 0 1-3.36-.92l-.24-.14-2.5.66.67-2.44-.16-.25a6.6 6.6 0 0 1 5.6-10.15 6.56 6.56 0 0 1 4.66 1.93 6.56 6.56 0 0 1 1.93 4.67 6.6 6.6 0 0 1-6.6 6.64Zm3.62-4.94c-.2-.1-1.17-.58-1.35-.64-.18-.07-.32-.1-.45.1-.13.2-.51.64-.63.77-.12.13-.23.15-.43.05-.2-.1-.83-.31-1.58-.98-.58-.52-.98-1.16-1.09-1.36-.12-.2-.01-.3.09-.4.09-.09.2-.23.3-.35.1-.12.13-.2.2-.33.07-.13.03-.25-.02-.35-.05-.1-.45-1.09-.62-1.5-.16-.38-.33-.33-.45-.34h-.38c-.13 0-.35.05-.53.25-.18.2-.7.68-.7 1.67 0 .98.72 1.93.82 2.06.1.13 1.4 2.15 3.4 3.01.48.2.85.33 1.14.42.48.15.91.13 1.26.08.38-.06 1.17-.48 1.34-.94.16-.46.16-.86.12-.94-.05-.09-.18-.14-.38-.24Z" fill="var(--ink)"/></svg>
+</a>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== DATA LAYER ===================== */
+const SEED_PRODUCTS = [
+  {id:'p1',name:'OXIDO',cat:'ropa',price:3890,stock:6,
+    img:'https://images.unsplash.com/photo-1774414489671-9f33b8dff0a9?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    desc:'Chaqueta técnica de corte relajado con tratamiento mate hidrorrepelente. Cierre YKK, forro interior térmico ligero.'},
+  {id:'p2',name:'GRAFITO',cat:'ropa',price:1650,stock:11,
+    img:'https://images.unsplash.com/photo-1762331655528-4af4bccf7c62?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    desc:'Legging de compresión media, tejido de secado rápido con acabado mate anti-brillo y bolsillo lateral oculto.'},
+  {id:'p3',name:'ARCILLA',cat:'ropa',price:980,stock:14,
+    img:'https://images.unsplash.com/photo-1606902965551-dce093cda6e7?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    desc:'Top deportivo de soporte medio, costuras planas y malla de ventilación en espalda.'},
+  {id:'p4',name:'BASALTO',cat:'ropa',price:1290,stock:9,
+    img:'https://images.unsplash.com/photo-1774414489812-f863c5bd32f4?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    desc:'Short técnico de doble capa, cintura ajustable y bolsillo con cierre para llaves o tarjeta.'},
+  {id:'p5',name:'CENIZA',cat:'ropa',price:2450,stock:5,
+    img:'https://images.unsplash.com/photo-1768853990312-0e20e64cf87f?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    desc:'Sudadera oversize en tejido cepillado con acabado mate, cuello redondo reforzado.'},
+  {id:'p6',name:'PIEDRA',cat:'ropa',price:890,stock:20,
+    img:'https://images.unsplash.com/photo-1774791581006-82c995251341?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    desc:'Playera técnica de una sola capa, tejido transpirable con tratamiento anti-olor.'},
+  {id:'p7',name:'LASTRE',cat:'accesorios',price:2890,stock:7,
+    img:'https://images.unsplash.com/photo-1595909315417-2edd382a56dc?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    desc:'Mochila deportiva 24L, compartimento independiente para calzado, tela impermeable mate.'},
+  {id:'p8',name:'NOMADA',cat:'accesorios',price:1190,stock:16,
+    img:'https://images.unsplash.com/photo-1595909315417-2edd382a56dc?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    desc:'Cangurera técnica ajustable, cierre magnético y bolsa interior para audífonos.'},
+  {id:'p9',name:'TALCO',cat:'accesorios',price:690,stock:22,
+    img:'https://images.unsplash.com/photo-1605348532760-6753d2c43329?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    desc:'Gorra deportiva de 6 paneles, visera curva y banda interior absorbente.'},
+  {id:'p10',name:'FORJA',cat:'accesorios',price:790,stock:13,
+    img:'https://images.unsplash.com/photo-1661332445185-6e2ca6754fc4?fm=jpg&q=80&w=1200&auto=format&fit=crop',
+    desc:'Guantes de entrenamiento con palma antideslizante y cierre de velcro ajustable.'}
+];
+
+const WHATSAPP_NUMBER = '523319101150';
+
+function loadProducts(){
+  const raw = localStorage.getItem('s2s_products');
+  if(!raw){ localStorage.setItem('s2s_products', JSON.stringify(SEED_PRODUCTS)); return SEED_PRODUCTS.slice(); }
+  try{ return JSON.parse(raw); }catch(e){ return SEED_PRODUCTS.slice(); }
+}
+function saveProducts(list){ localStorage.setItem('s2s_products', JSON.stringify(list)); }
+function loadCart(){ try{ return JSON.parse(localStorage.getItem('s2s_cart')) || []; }catch(e){ return []; } }
+function saveCart(c){ localStorage.setItem('s2s_cart', JSON.stringify(c)); }
+function loadOrders(){ try{ return JSON.parse(localStorage.getItem('s2s_orders')) || []; }catch(e){ return []; } }
+function saveOrders(o){ localStorage.setItem('s2s_orders', JSON.stringify(o)); }
+
+let products = loadProducts();
+let cart = loadCart();
+let currentFilter = 'todo';
+let activeProduct = null;
+let activeSize = null;
+let activeQty = 1;
+
+const fmt = n => '$' + Number(n).toLocaleString('es-MX');
+
+/* ===================== MARQUEE ===================== */
+(function initMarquee(){
+  const words = ['Colección 2026','Tacto mate','Hecho para moverse','Edición limitada','Lotes de 12 piezas'];
+  const track = document.getElementById('marqueeTrack');
+  let html = '';
+  for(let r=0;r<2;r++){
+    words.forEach(w=>{ html += `<span>${w}</span><span class="dot">•</span>`; });
+  }
+  track.innerHTML = html;
+})();
+
+/* ===================== RENDER: FILTERS + GRID ===================== */
+function renderFilters(){
+  const cats = ['todo','ropa','accesorios'];
+  const labels = {todo:'Todo',ropa:'Ropa',accesorios:'Accesorios'};
+  document.getElementById('filters').innerHTML = cats.map(c=>
+    `<button class="filter-btn ${c===currentFilter?'active':''}" onclick="setFilter('${c}')">${labels[c]}</button>`
+  ).join('');
+}
+function setFilter(c){ currentFilter = c; renderFilters(); renderGrid(); }
+
+function renderGrid(){
+  const grid = document.getElementById('productGrid');
+  const list = products.filter(p => currentFilter==='todo' || p.cat===currentFilter);
+  if(list.length===0){ grid.innerHTML = '<p class="empty-note" style="padding:40px;">No hay piezas en esta categoría por ahora.</p>'; return; }
+  grid.innerHTML = list.map(p => `
+    <div class="card" onclick="openQuickView('${p.id}')">
+      <div class="card-img">
+        <img src="${p.img}" alt="${p.name}" loading="lazy">
+        <span class="card-tag">${p.cat==='ropa'?'Ropa':'Accesorio'}</span>
+      </div>
+      <div class="card-body">
+        <h3>${p.name}</h3>
+        <span style="font-size:12px;color:var(--stone);">${p.stock>0?p.stock+' disponibles':'Agotado'}</span>
+        <div class="card-meta">
+          <span class="price mono">${fmt(p.price)}</span>
+          <span class="quick-add">Ver pieza →</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ===================== QUICK VIEW MODAL ===================== */
+function openQuickView(id){
+  const p = products.find(x=>x.id===id);
+  if(!p) return;
+  activeProduct = p; activeQty = 1;
+  const sizes = p.cat==='ropa' ? ['S','M','L','XL'] : ['Única'];
+  activeSize = sizes[0];
+  document.getElementById('qvImg').src = p.img;
+  document.getElementById('qvImg').alt = p.name;
+  document.getElementById('qvCat').textContent = p.cat==='ropa'?'Ropa técnica':'Accesorio';
+  document.getElementById('qvName').textContent = p.name;
+  document.getElementById('qvDesc').textContent = p.desc;
+  document.getElementById('qvPrice').textContent = fmt(p.price);
+  document.getElementById('qvQty').textContent = activeQty;
+  document.getElementById('qvStock').textContent = p.stock>0 ? `${p.stock} piezas disponibles en este lote.` : 'Sin existencias — vuelve pronto.';
+  document.getElementById('qvSizes').innerHTML = sizes.map(s=>
+    `<div class="size-opt ${s===activeSize?'active':''}" onclick="pickSize('${s}',this)">${s}</div>`
+  ).join('');
+  document.getElementById('quickView').classList.add('open');
+}
+function pickSize(s,el){
+  activeSize = s;
+  document.querySelectorAll('.size-opt').forEach(o=>o.classList.remove('active'));
+  el.classList.add('active');
+}
+function changeQty(d){
+  activeQty = Math.max(1, activeQty + d);
+  document.getElementById('qvQty').textContent = activeQty;
+}
+function closeQuickView(){ document.getElementById('quickView').classList.remove('open'); }
+
+function addToCart(){
+  if(!activeProduct) return;
+  if(activeProduct.stock<=0){ showToast('Esta pieza está agotada.'); return; }
+  const key = activeProduct.id + '::' + activeSize;
+  const existing = cart.find(c=>c.key===key);
+  if(existing){ existing.qty += activeQty; }
+  else{
+    cart.push({key, id:activeProduct.id, name:activeProduct.name, price:activeProduct.price,
+      img:activeProduct.img, size:activeSize, qty:activeQty, cat:activeProduct.cat});
+  }
+  saveCart(cart);
+  renderCartCount();
+  closeQuickView();
+  showToast(`${activeProduct.name} agregado a tu bolsa`);
+  openDrawer();
+}
+
+/* ===================== CART DRAWER ===================== */
+function renderCartCount(){
+  const total = cart.reduce((a,c)=>a+c.qty,0);
+  document.getElementById('cartCount').textContent = total;
+}
+function renderDrawer(){
+  const wrap = document.getElementById('drawerItems');
+  if(cart.length===0){
+    wrap.innerHTML = '<div class="drawer-empty">Tu bolsa está vacía.<br>Explora la colección y agrega tus piezas.</div>';
+    document.getElementById('drawerTotal').textContent = fmt(0);
+    document.getElementById('waCheckout').style.opacity = .4;
+    document.getElementById('waCheckout').style.pointerEvents = 'none';
+    return;
+  }
+  document.getElementById('waCheckout').style.opacity = 1;
+  document.getElementById('waCheckout').style.pointerEvents = 'auto';
+  wrap.innerHTML = cart.map(c => `
+    <div class="drawer-item">
+      <img src="${c.img}" alt="${c.name}">
+      <div class="di-info">
+        <h4>${c.name}</h4>
+        <div class="meta">TALLA ${c.size}</div>
+        <div class="di-qty">
+          <button onclick="changeCartQty('${c.key}',-1)">−</button>
+          <span class="mono">${c.qty}</span>
+          <button onclick="changeCartQty('${c.key}',1)">+</button>
+          <button class="di-remove" onclick="removeFromCart('${c.key}')">Quitar</button>
+        </div>
+      </div>
+      <div class="di-price mono">${fmt(c.price*c.qty)}</div>
+    </div>
+  `).join('');
+  const total = cart.reduce((a,c)=>a+c.price*c.qty,0);
+  document.getElementById('drawerTotal').textContent = fmt(total);
+  buildWaLink(total);
+}
+function changeCartQty(key,d){
+  const item = cart.find(c=>c.key===key);
+  if(!item) return;
+  item.qty += d;
+  if(item.qty<=0) cart = cart.filter(c=>c.key!==key);
+  saveCart(cart); renderCartCount(); renderDrawer();
+}
+function removeFromCart(key){
+  cart = cart.filter(c=>c.key!==key);
+  saveCart(cart); renderCartCount(); renderDrawer();
+}
+function buildWaLink(total){
+  let msg = 'Hola studio2sift 👋 quiero hacer este pedido:%0A%0A';
+  cart.forEach(c=>{
+    msg += `• ${c.name} (talla ${c.size}) x${c.qty} — ${fmt(c.price*c.qty)}%0A`;
+  });
+  msg += `%0ATotal: ${fmt(total)}%0A%0AMi nombre es: %0AMi dirección de envío es:`;
+  document.getElementById('waCheckout').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
+}
+document.getElementById('waCheckout').addEventListener('click', function(){
+  if(cart.length===0) return;
+  const total = cart.reduce((a,c)=>a+c.price*c.qty,0);
+  const orders = loadOrders();
+  orders.unshift({date:new Date().toLocaleString('es-MX'), items:cart.reduce((a,c)=>a+c.qty,0), total, status:'Enviado a WhatsApp'});
+  saveOrders(orders);
+  cart = [];
+  saveCart(cart);
+  renderCartCount();
+  setTimeout(()=>{ renderDrawer(); closeDrawer(); }, 300);
+});
+
+function openDrawer(){
+  renderDrawer();
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+
+/* ===================== TOAST ===================== */
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+/* ===================== HERO SPOTLIGHT ===================== */
+(function initSpotlight(){
+  const hero = document.querySelector('.hero');
+  const spot = document.getElementById('spot');
+  hero.addEventListener('mousemove', e=>{
+    const r = hero.getBoundingClientRect();
+    spot.style.setProperty('--mx', (e.clientX-r.left)+'px');
+    spot.style.setProperty('--my', (e.clientY-r.top)+'px');
+  });
+})();
+
+/* ===================== ADMIN ===================== */
+function openAdmin(){
+  document.getElementById('store').style.display = 'none';
+  document.querySelector('footer').style.display = 'none';
+  document.getElementById('admin').classList.add('open');
+  window.scrollTo(0,0);
+  if(sessionStorage.getItem('s2s_admin_ok')==='1'){ unlockAdmin(); }
+}
+function closeAdmin(){
+  document.getElementById('admin').classList.remove('open');
+  document.getElementById('store').style.display = 'block';
+  document.querySelector('footer').style.display = 'block';
+}
+function tryUnlock(){
+  const val = document.getElementById('adminPass').value;
+  if(val === '2026'){ sessionStorage.setItem('s2s_admin_ok','1'); unlockAdmin(); }
+  else{ showToast('Clave incorrecta'); }
+}
+function unlockAdmin(){
+  document.getElementById('adminLocked').style.display = 'none';
+  document.getElementById('adminContent').style.display = 'block';
+  renderAdminProducts();
+  renderAdminOrders();
+}
+function switchAdminTab(tab){
+  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  document.getElementById('panel-prods').classList.toggle('active', tab==='prods');
+  document.getElementById('panel-orders').classList.toggle('active', tab==='orders');
+}
+function renderAdminProducts(){
+  const tbody = document.getElementById('adminProdTable');
+  tbody.innerHTML = products.map(p=>`
+    <tr>
+      <td><img src="${p.img}" alt=""></td>
+      <td>${p.name}</td>
+      <td style="text-transform:capitalize;">${p.cat}</td>
+      <td class="mono">${fmt(p.price)}</td>
+      <td class="${p.stock<=3?'badge-low':''}">${p.stock}</td>
+      <td class="row-actions">
+        <button onclick="editProduct('${p.id}')">Editar</button>
+        <button onclick="deleteProduct('${p.id}')">Eliminar</button>
+      </td>
+    </tr>
+  `).join('');
+}
+function openForm(){
+  document.getElementById('f-id').value='';
+  document.getElementById('f-name').value='';
+  document.getElementById('f-cat').value='ropa';
+  document.getElementById('f-price').value='';
+  document.getElementById('f-stock').value='';
+  document.getElementById('f-img').value='';
+  document.getElementById('f-desc').value='';
+  document.getElementById('prodForm').classList.add('open');
+}
+function closeForm(){ document.getElementById('prodForm').classList.remove('open'); }
+function editProduct(id){
+  const p = products.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('f-id').value=p.id;
+  document.getElementById('f-name').value=p.name;
+  document.getElementById('f-cat').value=p.cat;
+  document.getElementById('f-price').value=p.price;
+  document.getElementById('f-stock').value=p.stock;
+  document.getElementById('f-img').value=p.img;
+  document.getElementById('f-desc').value=p.desc;
+  document.getElementById('prodForm').classList.add('open');
+  document.getElementById('prodForm').scrollIntoView({behavior:'smooth'});
+}
+function saveProduct(){
+  const id = document.getElementById('f-id').value;
+  const name = document.getElementById('f-name').value.trim();
+  const cat = document.getElementById('f-cat').value;
+  const price = Number(document.getElementById('f-price').value)||0;
+  const stock = Number(document.getElementById('f-stock').value)||0;
+  const img = document.getElementById('f-img').value.trim() || 'https://images.unsplash.com/photo-1605348532760-6753d2c43329?fm=jpg&q=80&w=1200&auto=format&fit=crop';
+  const desc = document.getElementById('f-desc').value.trim();
+  if(!name){ showToast('Ponle nombre a la pieza'); return; }
+  if(id){
+    const p = products.find(x=>x.id===id);
+    Object.assign(p,{name,cat,price,stock,img,desc});
+  }else{
+    products.push({id:'p'+Date.now(),name,cat,price,stock,img,desc});
+  }
+  saveProducts(products);
+  renderAdminProducts();
+  renderGrid();
+  closeForm();
+  showToast('Producto guardado');
+}
+function deleteProduct(id){
+  if(!confirm('¿Eliminar esta pieza del catálogo?')) return;
+  products = products.filter(p=>p.id!==id);
+  saveProducts(products);
+  renderAdminProducts();
+  renderGrid();
+}
+function renderAdminOrders(){
+  const orders = loadOrders();
+  const tbody = document.getElementById('adminOrdersTable');
+  const empty = document.getElementById('ordersEmpty');
+  if(orders.length===0){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = orders.map(o=>`
+    <tr><td>${o.date}</td><td>${o.items}</td><td class="mono">${fmt(o.total)}</td><td>${o.status}</td></tr>
+  `).join('');
+}
+
+/* ===================== INIT ===================== */
+document.getElementById('quickView').addEventListener('click', e=>{ if(e.target.id==='quickView') closeQuickView(); });
+renderFilters();
+renderGrid();
+renderCartCount();
+</script>
+</body>
+</html>
